@@ -1,5 +1,4 @@
 "use client";
-
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -14,13 +13,18 @@ function QuestionCountInner() {
   const domain = searchParams.get("domain") || "";
   const level = searchParams.get("level") || "";
 
-  const [count, setCount] = useState(5);
+  const [count, setCount] = useState<number>(5);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     console.log("Loaded question count page:", { branch, role, domain, level });
   }, [branch, role, domain, level]);
 
   const handleStart = () => {
+    if (count < 5 || count > 30) {
+      setError("Please select between 5 and 30 questions.");
+      return;
+    }
     router.push(
       `/game?branch=${branch}&role=${role}&domain=${domain}&level=${level}&count=${count}`
     );
@@ -37,9 +41,15 @@ function QuestionCountInner() {
         value={count}
         min={5}
         max={30}
-        onChange={(e) => setCount(Number(e.target.value))}
-        className="bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 w-32 text-center mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        onChange={(e) => {
+          const val = Number(e.target.value);
+          if (val >= 5 && val <= 30) setError("");
+          setCount(val);
+        }}
+        className="bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 w-32 text-center mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
+
+      {error && <p className="text-red-400 mb-3">{error}</p>}
 
       <button
         onClick={handleStart}
@@ -53,7 +63,7 @@ function QuestionCountInner() {
 
 export default function QuestionCountPage() {
   return (
-    <Suspense fallback={<div className="text-white p-6">Loading...</div>}>
+    <Suspense fallback={<div className="text-white p-6">Loading question count...</div>}>
       <QuestionCountInner />
     </Suspense>
   );
