@@ -3,20 +3,31 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function GET() {
   try {
-    const keyExists = !!process.env.GEMINI_API_KEY;
-    if (!keyExists) {
-      return NextResponse.json({ error: "❌ GEMINI_API_KEY not found in environment." }, { status: 500 });
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "❌ GEMINI_API_KEY not found in environment variables." },
+        { status: 500 }
+      );
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // ✅ Initialize Gemini client
+    const genAI = new GoogleGenerativeAI(apiKey);
 
-    const result = await model.generateContent("Respond with the word 'Hello' only.");
+    // ✅ Use supported model name
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+
+    // ✅ Generate simple response to test API connectivity
+    const result = await model.generateContent("Say 'Hello from Gemini on Vercel!'");
     const text = result.response.text();
 
     return NextResponse.json({ success: true, response: text });
-  } catch (err: any) {
-    console.error("❌ Gemini API Test Error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (error: any) {
+    console.error("Gemini API error:", error);
+    return NextResponse.json(
+      { error: error.message || "Unknown Gemini error" },
+      { status: 500 }
+    );
   }
 }
