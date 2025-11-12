@@ -1,47 +1,48 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 
-const levels = ["Easy", "Medium", "Hard", "Auto"];
+export const dynamic = "force-dynamic";
 
-export default function LevelPage() {
-  const router = useRouter();
+function LevelPageInner() {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
-  const branch = searchParams.get("branch");
-  const role = searchParams.get("role");
-  const domain = searchParams.get("domain");
+  const branch = searchParams.get("branch") || "";
+  const role = searchParams.get("role") || "";
+  const domain = searchParams.get("domain") || "";
 
-  function handleSelect(level: string) {
-    router.push(`/questioncount?branch=${branch}&role=${role}&domain=${domain}&level=${level}`);
+  useEffect(() => {
+    console.log("Loaded level page:", { branch, role, domain });
+  }, [branch, role, domain]);
 
+  function handleLevel(level: string) {
+    router.push(`/game?branch=${branch}&role=${role}&domain=${domain}&level=${level}`);
   }
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-6">
-      <h1 className="text-4xl font-bold mb-6">Select Difficulty Level</h1>
-      <p className="text-lg mb-8 text-gray-300">
-        Domain: <span className="font-semibold text-blue-400">{domain}</span> |
-        Role: <span className="font-semibold text-blue-400">{role}</span>
-      </p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {levels.map((level) => (
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
+      <h1 className="text-3xl font-bold mb-6">Select Difficulty Level</h1>
+      <div className="flex flex-col gap-4 w-full max-w-xs">
+        {["Easy", "Medium", "Hard", "Auto"].map((level) => (
           <button
             key={level}
-            onClick={() => handleSelect(level)}
-            className="bg-gray-800 border border-gray-700 px-8 py-4 rounded-xl text-xl font-semibold hover:bg-gray-700 transition hover:scale-105 active:scale-95"
+            onClick={() => handleLevel(level.toLowerCase())}
+            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg text-lg font-semibold transition-all duration-300"
           >
             {level}
           </button>
         ))}
       </div>
+    </div>
+  );
+}
 
-      <p className="mt-8 text-gray-400 text-center max-w-md">
-        <strong>Auto Mode:</strong> starts at Easy and increases difficulty
-        automatically as you answer correctly. If you miss a question, the
-        level stays the same.
-      </p>
-    </main>
+export default function LevelPage() {
+  return (
+    <Suspense fallback={<div className="text-white p-6">Loading levels...</div>}>
+      <LevelPageInner />
+    </Suspense>
   );
 }
