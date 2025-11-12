@@ -1,5 +1,4 @@
 "use client";
-
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -20,31 +19,36 @@ function GamePageInner() {
   const [feedback, setFeedback] = useState("");
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     async function loadQuestions() {
       try {
         setLoading(true);
+        setError("");
         const res = await fetch(`/api/questions`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ domain, level, count }),
         });
 
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
         const data = await res.json();
+
         if (Array.isArray(data.questions)) {
           setQuestions(data.questions);
         } else {
-          console.error("Unexpected response:", data);
+          throw new Error("Unexpected response format");
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error loading questions:", err);
+        setError("⚠️ Failed to load questions. Please try again.");
       } finally {
         setLoading(false);
       }
     }
 
-    if (domain && level) {
+    if (domain && level && count) {
       loadQuestions();
     }
   }, [domain, level, count]);
@@ -71,13 +75,12 @@ function GamePageInner() {
     if (currentQ + 1 < questions.length) {
       setCurrentQ((q) => q + 1);
     } else {
-      alert(`Game Over! Final Score: ${score}/${questions.length}`);
-      router.push("/branch"); // Redirect to start again
+      router.push(`/results?score=${score}&total=${questions.length}`);
     }
   }
 
   if (loading) return <div className="text-white p-6">Loading questions...</div>;
-
+  if (error) return <div className="text-red-400 p-6">{error}</div>;
   if (questions.length === 0)
     return <div className="text-white p-6">No questions available.</div>;
 
@@ -100,15 +103,16 @@ function GamePageInner() {
           {current.options.map((opt: string, i: number) => {
             const isSelected = selected === opt;
             const isCorrect =
-              isSelected && opt.trim().toLowerCase() === current.answer.trim().toLowerCase();
+              isSelected &&
+              opt.trim().toLowerCase() ===
+                current.answer.trim().toLowerCase();
 
             return (
               <button
                 key={i}
                 onClick={() => handleAnswer(opt)}
                 disabled={!!selected}
-                className={`block w-full text-left px-4 py-2 rounded-lg border transition-all duration-300
-                ${
+                className={`block w-full text-left px-4 py-2 rounded-lg border transition-all duration-300 ${
                   selected
                     ? isCorrect
                       ? "bg-green-600 border-green-600"
@@ -137,7 +141,7 @@ function GamePageInner() {
             onClick={handleNext}
             className="mt-6 bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300"
           >
-            Next →
+            {currentQ + 1 < questions.length ? "Next →" : "Finish 🎉"}
           </button>
         )}
       </div>
