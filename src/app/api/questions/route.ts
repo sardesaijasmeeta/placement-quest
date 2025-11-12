@@ -1,5 +1,9 @@
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+console.log("🔑 GEMINI_API_KEY loaded:", !!process.env.GEMINI_API_KEY);
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -30,7 +34,7 @@ export async function POST(req: Request) {
     `;
 
     const model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-      .getGenerativeModel({ model: "gemini-2.0-flash" });
+      .getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();
