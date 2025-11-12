@@ -2,8 +2,8 @@
 
 import { Suspense, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-
 export const dynamic = "force-dynamic";
+
 
 function LevelPageInner() {
   const searchParams = useSearchParams();
