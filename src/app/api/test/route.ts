@@ -1,32 +1,43 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { verbalQuestions } from "@/data/verbal";
 
-export async function GET() {
+export async function POST(req: Request) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const { domain, level, count } = await req.json();
 
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "❌ GEMINI_API_KEY not found in environment variables." },
-        { status: 500 }
-      );
+    // 🔹 Handle VERBAL using static dataset
+    if (domain?.toLowerCase() === "verbal") {
+      let pool: any[] = [];
+
+      if (level === "easy") pool = verbalQuestions.easy;
+      else if (level === "medium") pool = verbalQuestions.medium;
+      else if (level === "hard") pool = verbalQuestions.hard;
+      else {
+        // auto → mix all
+        pool = [
+          ...verbalQuestions.easy,
+          ...verbalQuestions.medium,
+          ...verbalQuestions.hard,
+        ];
+      }
+
+      // shuffle questions
+      const shuffled = pool.sort(() => 0.5 - Math.random());
+
+      return NextResponse.json({
+        questions: shuffled.slice(0, count),
+      });
     }
 
-    // ✅ Initialize Gemini client
-    const genAI = new GoogleGenerativeAI(apiKey);
-
-    // ✅ Use supported model name
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-
-    // ✅ Generate simple response to test API connectivity
-    const result = await model.generateContent("Say 'Hello from Gemini on Vercel!'");
-    const text = result.response.text();
-
-    return NextResponse.json({ success: true, response: text });
-  } catch (error: any) {
-    console.error("Gemini API error:", error);
+    // 🔸 Other domains not ready yet
     return NextResponse.json(
-      { error: error.message || "Unknown Gemini error" },
+      { error: "Domain not supported yet" },
+      { status: 400 }
+    );
+  } catch (error: any) {
+    console.error("API error:", error);
+    return NextResponse.json(
+      { error: error.message || "Unknown error" },
       { status: 500 }
     );
   }

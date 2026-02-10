@@ -34,6 +34,10 @@ function GamePageInner() {
 
         if (!res.ok) throw new Error(`API error: ${res.status}`);
         const data = await res.json();
+if (data.quotaExceeded) {
+  alert("⚠️ AI question limit reached. Please try again later.");
+  return;
+}
 
         if (Array.isArray(data.questions)) {
           setQuestions(data.questions);
