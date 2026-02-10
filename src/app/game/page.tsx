@@ -79,7 +79,8 @@ if (data.quotaExceeded) {
     if (currentQ + 1 < questions.length) {
       setCurrentQ((q) => q + 1);
     } else {
-      router.push(`/results?score=${score}&total=${questions.length}`);
+      router.push("/branch");
+
     }
   }
 
